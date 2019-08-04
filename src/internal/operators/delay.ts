@@ -45,8 +45,15 @@ import { MonoTypeOperatorFunction, PartialObserver, SchedulerAction, SchedulerLi
  * delayedClicks.subscribe(x => console.log(x));
  * ```
  *
- * @see {@link debounceTime}
  * @see {@link delayWhen}
+ * @see {@link audit}
+ * @see {@link auditTime}
+ * @see {@link debounce}
+ * @see {@link debounceTime}
+ * @see {@link sample}
+ * @see {@link sampleTime}
+ * @see {@link throttle}
+ * @see {@link throttleTime}
  *
  * @param {number|Date} delay The delay duration in milliseconds (a `number`) or
  * a `Date` until which the emission of the source items is delayed.
