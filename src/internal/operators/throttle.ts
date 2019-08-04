@@ -1,13 +1,13 @@
-import { Operator } from '../Operator';
-import { Observable } from '../Observable';
-import { Subscriber } from '../Subscriber';
-import { Subscription } from '../Subscription';
+import {Operator} from '../Operator';
+import {Observable} from '../Observable';
+import {Subscriber} from '../Subscriber';
+import {Subscription} from '../Subscription';
 
-import { OuterSubscriber } from '../OuterSubscriber';
-import { InnerSubscriber } from '../InnerSubscriber';
-import { subscribeToResult } from '../util/subscribeToResult';
+import {OuterSubscriber} from '../OuterSubscriber';
+import {InnerSubscriber} from '../InnerSubscriber';
+import {subscribeToResult} from '../util/subscribeToResult';
 
-import { MonoTypeOperatorFunction, SubscribableOrPromise, TeardownLogic } from '../types';
+import {MonoTypeOperatorFunction, SubscribableOrPromise, TeardownLogic} from '../types';
 
 export interface ThrottleConfig {
   leading?: boolean;
@@ -36,7 +36,12 @@ export const defaultThrottleConfig: ThrottleConfig = {
  * is enabled by calling the `durationSelector` function with the source value,
  * which returns the "duration" Observable. When the duration Observable emits a
  * value or completes, the timer is disabled, and this process repeats for the
- * next source value.
+ * next source value. Optionally takes a {@link SchedulerLike} for managing timers.
+ * Another optional parameter is the `config` param.
+ * It's type is `ThrottleConfig`, an object with 2 boolean options, `leading` and `trailing`.
+ * Throttling is initiated by a incoming notification. If the `leading` option is set to true (default)
+ * the Notification that starts the throttling is also forwarded to the consumer.
+ * If `trailing` is set to `true` (`false` by default) the last received value in the throttle period is emitted.
  *
  * ## Example
  * Emit clicks at a rate of at most one click per second
@@ -49,10 +54,14 @@ export const defaultThrottleConfig: ThrottleConfig = {
  * result.subscribe(x => console.log(x));
  * ```
  *
- * @see {@link audit}
- * @see {@link debounce}
+ * @see {@link delay}
  * @see {@link delayWhen}
+ * @see {@link audit}
+ * @see {@link auditTime}
+ * @see {@link debounce}
+ * @see {@link debounceTime}
  * @see {@link sample}
+ * @see {@link sampleTime}
  * @see {@link throttleTime}
  *
  * @param {function(value: T): SubscribableOrPromise} durationSelector A function
@@ -65,15 +74,19 @@ export const defaultThrottleConfig: ThrottleConfig = {
  * @method throttle
  * @owner Observable
  */
-export function throttle<T>(durationSelector: (value: T) => SubscribableOrPromise<any>,
-                            config: ThrottleConfig = defaultThrottleConfig): MonoTypeOperatorFunction<T> {
+export function throttle<T>(
+  durationSelector: (value: T) => SubscribableOrPromise<any>,
+  config: ThrottleConfig = defaultThrottleConfig
+): MonoTypeOperatorFunction<T> {
   return (source: Observable<T>) => source.lift(new ThrottleOperator(durationSelector, config.leading, config.trailing));
 }
 
 class ThrottleOperator<T> implements Operator<T, T> {
-  constructor(private durationSelector: (value: T) => SubscribableOrPromise<any>,
-              private leading: boolean,
-              private trailing: boolean) {
+  constructor(
+    private durationSelector: (value: T) => SubscribableOrPromise<any>,
+    private leading: boolean,
+    private trailing: boolean
+  ) {
   }
 
   call(subscriber: Subscriber<T>, source: any): TeardownLogic {
@@ -93,10 +106,12 @@ class ThrottleSubscriber<T, R> extends OuterSubscriber<T, R> {
   private _sendValue: T;
   private _hasValue = false;
 
-  constructor(protected destination: Subscriber<T>,
-              private durationSelector: (value: T) => SubscribableOrPromise<number>,
-              private _leading: boolean,
-              private _trailing: boolean) {
+  constructor(
+    protected destination: Subscriber<T>,
+    private durationSelector: (value: T) => SubscribableOrPromise<number>,
+    private _leading: boolean,
+    private _trailing: boolean
+  ) {
     super(destination);
   }
 
@@ -114,7 +129,7 @@ class ThrottleSubscriber<T, R> extends OuterSubscriber<T, R> {
   }
 
   private send() {
-    const { _hasValue, _sendValue } = this;
+    const {_hasValue, _sendValue} = this;
     if (_hasValue) {
       this.destination.next(_sendValue);
       this.throttle(_sendValue);
@@ -140,7 +155,7 @@ class ThrottleSubscriber<T, R> extends OuterSubscriber<T, R> {
   }
 
   private throttlingDone() {
-    const { _throttled, _trailing } = this;
+    const {_throttled, _trailing} = this;
     if (_throttled) {
       _throttled.unsubscribe();
     }
@@ -153,7 +168,8 @@ class ThrottleSubscriber<T, R> extends OuterSubscriber<T, R> {
 
   notifyNext(outerValue: T, innerValue: R,
              outerIndex: number, innerIndex: number,
-             innerSub: InnerSubscriber<T, R>): void {
+             innerSub: InnerSubscriber<T, R>
+  ): void {
     this.throttlingDone();
   }
 
