@@ -22,7 +22,11 @@ import { MonoTypeOperatorFunction, SchedulerLike, TeardownLogic } from '../types
  * is enabled. After `duration` milliseconds (or the time unit determined
  * internally by the optional `scheduler`) has passed, the timer is disabled,
  * and this process repeats for the next source value. Optionally takes a
- * {@link SchedulerLike} for managing timers.
+ * {@link SchedulerLike} for managing timers. Another optional parameter is the `config` param.
+ * It's type is `ThrottleConfig`, an object with 2 boolean options, `leading` and `trailing`.
+ * Throttling is initiated by a incoming notification. If the `leading` option is set to true (default)
+ * the Notification that starts the throttling is also forwarded to the consumer.
+ * If `trailing` is set to `true` (`false` by default) the last received value in the throttle period is emitted.
  *
  * ## Examples
  *
@@ -67,9 +71,13 @@ import { MonoTypeOperatorFunction, SchedulerLike, TeardownLogic } from '../types
  * If you enable the `leading` parameter in this example, the output would be the primary click and
  * the double click, but restricts additional clicks within 400ms.
  *
- * @see {@link auditTime}
- * @see {@link debounceTime}
  * @see {@link delay}
+ * @see {@link delayWhen}
+ * @see {@link audit}
+ * @see {@link auditTime}
+ * @see {@link debounce}
+ * @see {@link debounceTime}
+ * @see {@link sample}
  * @see {@link sampleTime}
  * @see {@link throttle}
  *
